@@ -1,4 +1,4 @@
-name: Security Pipeline
+name: DevSecOps Pipeline
 
 on:
   push:
@@ -7,26 +7,26 @@ on:
     branches: [ "main" ]
 
 jobs:
-
-  # JOB 1 : SAST/TEST/QUALITY
-  code-security-and-unit-test: 
+  code-security-and-tests:
     name: Code Quality, Unit Tests & SAST
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name : Checkout repository
-        uses: actions/checkout@v4
-        with: 
+      # actions/checkout v4.2.2 (épinglé par commit SHA)
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
           fetch-depth: 0
-      # Détection des secrets pré-commit
+
+      # gitleaks-action v2.3.8 (épinglé par commit SHA)
       - name: Gitleaks Scan
-        uses: gitleaks/gitleaks-action@v2
-        env: 
+        uses: gitleaks/gitleaks-action@e5f586a111a4cf1da24a87c12658e370cf9f7ef0
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      #2. Environnement python pour les tests
-      - name: Setup python
-        uses: actions/setup-python@v5
+      # actions/setup-python v5.3.0 (épinglé par commit SHA)
+      - name: Set up Python
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
         with:
           python-version: '3.11'
           cache: 'pip'
@@ -36,40 +36,36 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
-      
-      #3. Linter Qualité syntaxique
+
       - name: Lint with Ruff
         run: |
           ruff check .
-      
-      #4 Test unitaire
-      - name: Run unit test with Pytest
+
+      - name: Run Unit Tests with Pytest
         run: |
           pytest -v test_app.py
-      
-      #5 Scan SAST avec semgrep (owasp top 10)
-      - name: Run semgrep SAST
-        run: | 
+
+      - name: Run Semgrep SAST
+        run: |
           pip install semgrep
           semgrep scan --config auto --error
-  # JOB2: Build
-  container-security: 
-    name: Container Build & SCA audit
+
+  container-security:
+    name: Container Build & SCA Audit
     runs-on: ubuntu-latest
-    needs: code-security-and-unit-test
+    needs: code-security-and-tests
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
-      #1 Compilation de l'image
-      - name: Build docker image
+      - name: Build Docker image
         run: |
-          docker build -t lab-python-app:${{ github.sha }}
-      
-# 2. Scan des dépendances Python (Porte bloquante sur HIGH/CRITICAL)
+          docker build -t lab-python-app:${{ github.sha }} .
+
+      # trivy-action v0.30.0 (épinglé par commit SHA)
       - name: Scan Python dependencies (Strict Gate)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0
         with:
           image-ref: 'lab-python-app:${{ github.sha }}'
           vuln-type: 'library'
@@ -77,9 +73,8 @@ jobs:
           ignore-unfixed: true
           exit-code: '1'
 
-      # 3. Audit de l'OS sous-jacent (Traçabilité)
       - name: Audit OS base image
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0
         with:
           image-ref: 'lab-python-app:${{ github.sha }}'
           vuln-type: 'os'
