@@ -1,0 +1,5 @@
+# Seul ce dont l'image a besoin entre dans le contexte de build
+*
+!requirements.txt
+!app/
+**/__pycache__

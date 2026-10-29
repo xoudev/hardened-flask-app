@@ -59,7 +59,7 @@ jobs:
 
       - name: Run Unit Tests with Pytest
         run: |
-          pytest -v test_app.py
+          pytest -v
 
       - name: Run Semgrep SAST
         run: |

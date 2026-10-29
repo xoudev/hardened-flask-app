@@ -1,17 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Toujours exécuter depuis la racine du projet, peu importe d'où le script est lancé
+cd "$(dirname "$0")/.."
+mkdir -p secrets
+
 echo "=== [1/5] Vérification des secrets locaux ==="
-if [ ! -f db_password.txt ]; then
-  echo -n "supersecretpassword" > db_password.txt
-  chmod 600 db_password.txt
-  echo "Fichier db_password.txt généré."
+if [ ! -f secrets/db_password.txt ]; then
+  echo -n "supersecretpassword" > secrets/db_password.txt
+  chmod 600 secrets/db_password.txt
+  echo "Fichier secrets/db_password.txt généré."
 fi
 
-if [ ! -f vault_token.txt ]; then
-  echo -n "myroottoken" > vault_token.txt
-  chmod 644 vault_token.txt
-  echo "Fichier vault_token.txt généré."
+if [ ! -f secrets/vault_token.txt ]; then
+  echo -n "myroottoken" > secrets/vault_token.txt
+  chmod 644 secrets/vault_token.txt
+  echo "Fichier secrets/vault_token.txt généré."
 fi
 
 echo "=== [2/5] Démarrage des conteneurs ==="

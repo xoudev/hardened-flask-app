@@ -1,18 +1,21 @@
-# Secrets locaux
+# Secrets locaux (montés comme secrets Docker)
+secrets/
 *.txt
 !requirements.txt
 !requirements-dev.txt
-vault_token*
-db_password*
 
 # Rapports et logs
+reports/
 report_trivy*
 bench_report*
 *.log
 
-# Cache Python
+# Python
 __pycache__/
 *.pyc
+.pytest_cache/
+.ruff_cache/
+.venv/
 
 # Added by ggshield
 .cache_ggshield

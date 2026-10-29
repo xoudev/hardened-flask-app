@@ -22,7 +22,7 @@ services:
       - ALL
     security_opt:
       - no-new-privileges=true
-      - seccomp:./seccomp-flask.json
+      - seccomp:./docker/seccomp-flask.json
     networks:
       - frontend-net
       - db-net
@@ -87,6 +87,6 @@ networks:
 
 secrets:
   db_password:
-    file: db_password.txt
+    file: ./secrets/db_password.txt
   vault_token:
-    file: vault_token.txt
+    file: ./secrets/vault_token.txt
