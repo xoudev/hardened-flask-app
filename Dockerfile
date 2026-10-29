@@ -5,7 +5,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
-FROM gcr.io/distroless/python3-debian12:latest
+FROM cgr.dev/chainguard/python:latest
 
 WORKDIR /app
 

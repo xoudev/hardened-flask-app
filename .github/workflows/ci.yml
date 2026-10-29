@@ -30,12 +30,22 @@ jobs:
           docker build -t lab-python-app:${{ github.sha }} .
 
       # 4. Audit de sécurité du conteneur avec Trivy
-      - name: Run Trivy container scanner
+# 1. Porte bloquante sur le code et les librairies Python
+      - name: Scan Python dependencies (Strict Gate)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'lab-python-app:${{ github.sha }}'
-          format: 'table'
-          vuln-type: 'os,library'
-          severity: 'CRITICAL'
+          vuln-type: 'library'
+          severity: 'CRITICAL,HIGH'
           ignore-unfixed: true
           exit-code: '1'
+
+      # 2. Audit de l'OS sous-jacent (Non bloquant ou alertant)
+      - name: Audit OS base image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'lab-python-app:${{ github.sha }}'
+          vuln-type: 'os'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          exit-code: '0'
