@@ -6,6 +6,3 @@ urllib3>=2.8.0
 msgpack>=1.2.3
 setuptools>=78.1.1
 
-# Pour les tests
-pytest==8.3.4
-ruff==0.8.4
