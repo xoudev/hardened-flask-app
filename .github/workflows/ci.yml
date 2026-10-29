@@ -1,31 +1,41 @@
-name: Test Pipeline
+name: Security Pipeline
 
-# 1. Déclencheurs
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
-# 2. Travaux à exécuter
 jobs:
-  smoke-test:
-    name: Build Verification
+  security-gate:
+    name: Build & Vulnerability Scan
     runs-on: ubuntu-latest
 
     steps:
-      # Étape A : Cloner le dépôt Git sur la VM éphémère
-      - name: Récupérer le code source
+      # 1. Cloner l'historique complet pour que Gitleaks puisse auditer les commits
+      - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      # Étape B : Exécuter une simple commande shell
-      - name: Vérifier l'environnement du runner
-        run: |
-          echo "Utilisateur actuel : $(whoami)"
-          docker --version
-          python3 --version
+      # 2. Détection de secrets dans les fichiers et commits
+      - name: Run Gitleaks Secret Scanner
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Étape C : Tester la compilation de l'image Distroless
-      - name: Compiler l'image Docker
+      # 3. Compilation de l'image Distroless
+      - name: Build Docker image
         run: |
-          docker build -t lab-python-app:test .
+          docker build -t lab-python-app:${{ github.sha }} .
+
+      # 4. Audit de sécurité du conteneur avec Trivy
+      - name: Run Trivy container scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'lab-python-app:${{ github.sha }}'
+          format: 'table'
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          exit-code: '1'
