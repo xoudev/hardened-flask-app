@@ -1,22 +1,23 @@
 FROM python:3.11-slim-bookworm AS builder
 
-WORKDIR /app
+WORKDIR /build
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+RUN pip install --no-cache-dir --user -r requirements.txt
 
-FROM cgr.dev/chainguard/python:latest
+FROM gcr.io/distroless/python3-debian12:debug
 
 WORKDIR /app
 
-COPY --from=builder /install /usr/local
+# Copie des packages Python depuis le builder
+COPY --from=builder /root/.local /root/.local
 COPY app.py .
 
-ENV PYTHONPATH=/usr/local/lib/python3.11/site-packages
-ENV PYTHONUNBUFFERED=1
+ENV PATH=/root/.local/bin:$PATH
+ENV PYTHONPATH=/root/.local/lib/python3.11/site-packages
 
-USER nonroot
+USER 65532:65532
 
 EXPOSE 5000
 
-ENTRYPOINT ["/usr/bin/python3", "app.py"]
+ENTRYPOINT ["python", "app.py"]
