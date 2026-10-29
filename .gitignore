@@ -12,3 +12,6 @@ bench_report*
 # Cache Python
 __pycache__/
 *.pyc
+
+# Added by ggshield
+.cache_ggshield
