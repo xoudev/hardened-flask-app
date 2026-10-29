@@ -39,3 +39,8 @@ def test_list_users_vault_failure_handling(client):
 
         assert response.status_code == 500
         assert json_data["status"] == "error"
+
+def test_health_check(client):
+    response = client.get('/health')
+    assert response.status_code == 200
+    assert response.get_json() == {"status": "healthy"}

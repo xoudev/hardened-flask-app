@@ -97,3 +97,32 @@ jobs:
           severity: 'CRITICAL,HIGH'
           ignore-unfixed: true
           exit-code: '0'
+  dast-scan:
+    name: Dynamic Application Security Testing (DAST)
+    runs-on: ubuntu-latest
+    needs: container-security
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Build local image for DAST
+        run: |
+          docker build -t lab-python-app:dast .
+
+      - name: Run containerized application
+        run: |
+          docker run -d --name flask-dast-target -p 5000:5000 -e FLASK_RUN_HOST=0.0.0.0 lab-python-app:dast
+          
+          # Attente que le port 5000 réponde
+          timeout 30 bash -c 'until curl -s http://127.0.0.1:5000/health > /dev/null; do sleep 1; done'
+          echo "Application Flask démarrée et accessible."
+
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25
+        with:
+          target: 'http://127.0.0.1:5000/'
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-m 1 -a'
+          allow_issue_writing: false
+          fail_action: false
