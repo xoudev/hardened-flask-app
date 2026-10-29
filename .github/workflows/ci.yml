@@ -20,7 +20,7 @@ jobs:
 
       # gitleaks-action v2.3.8 (épinglé par commit SHA)
       - name: Gitleaks Scan
-        uses: gitleaks/gitleaks-action@e5f586a111a4cf1da24a87c12658e370cf9f7ef0
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

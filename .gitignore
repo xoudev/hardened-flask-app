@@ -1,6 +1,7 @@
 # Secrets locaux
 *.txt
 !requirements.txt
+!requirements-dev.txt
 vault_token*
 db_password*
 
