@@ -1,0 +1,92 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    stop_grace_period: 1s
+    pids_limit: 50
+    mem_limit: 256M
+    cpus: 0.5
+    ports:
+      - "127.0.0.1:5000:5000"
+    environment:
+      - VAULT_ADDR=http://vault:8200
+    depends_on:
+      db:
+        condition: service_healthy
+      vault:
+        condition: service_started
+    read_only: true
+    tmpfs:
+      - /tmp:size=32M,noexec,nosuid,nodev
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges=true
+      - seccomp:./seccomp-flask.json
+    networks:
+      - frontend-net
+      - db-net
+      - vault-net
+    secrets:
+      - vault_token
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    pids_limit: 100
+    mem_limit: 512M
+    cpus: 0.5
+    environment:
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB: appdb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - db-net
+    secrets:
+      - db_password
+    security_opt:
+      - no-new-privileges=true
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d appdb"]
+      interval: 3s
+      timeout: 2s
+      retries: 3
+      start_period: 3s
+
+  vault:
+    image: hashicorp/vault:latest
+    container_name: lab-vault
+    restart: unless-stopped
+    pids_limit: 100
+    mem_limit: 256M
+    cpus: 0.5
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: "myroottoken"
+      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
+    ports:
+      - "127.0.0.1:8200:8200"
+    cap_add:
+      - IPC_LOCK
+    security_opt:
+      - no-new-privileges=true
+    networks:
+      - vault-net
+      - db-net
+
+volumes:
+  pgdata:
+
+networks:
+  frontend-net:
+  db-net:
+    internal: true
+  vault-net:
+    internal: true
+
+secrets:
+  db_password:
+    file: db_password.txt
+  vault_token:
+    file: vault_token.txt

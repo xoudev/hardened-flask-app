@@ -1,0 +1,14 @@
+# Secrets locaux
+*.txt
+!requirements.txt
+vault_token*
+db_password*
+
+# Rapports et logs
+report_trivy*
+bench_report*
+*.log
+
+# Cache Python
+__pycache__/
+*.pyc
