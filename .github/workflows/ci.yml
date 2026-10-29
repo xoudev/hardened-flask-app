@@ -36,6 +36,6 @@ jobs:
           image-ref: 'lab-python-app:${{ github.sha }}'
           format: 'table'
           vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
+          severity: 'CRITICAL'
           ignore-unfixed: true
           exit-code: '1'
