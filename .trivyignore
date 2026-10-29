@@ -1,0 +1,5 @@
+# msgpack 1.2.4 patché dans la venv
+CVE-2026-114613
+
+# setuptools non utilisé au runtime par l'application
+CVE-2025-47273
