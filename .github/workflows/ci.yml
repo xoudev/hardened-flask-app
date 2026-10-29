@@ -65,7 +65,7 @@ jobs:
 
       # trivy-action v0.30.0 (épinglé par commit SHA)
       - name: Scan Python dependencies (Strict Gate)
-        uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
           image-ref: 'lab-python-app:${{ github.sha }}'
           vuln-type: 'library'
@@ -74,7 +74,7 @@ jobs:
           exit-code: '1'
 
       - name: Audit OS base image
-        uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
           image-ref: 'lab-python-app:${{ github.sha }}'
           vuln-type: 'os'
