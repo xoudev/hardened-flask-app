@@ -10,7 +10,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Stage 2 : Runtime minimale Chainguard (Zero-CVE)
-FROM cgr.dev/chainguard/python@sha256:54406d24c739b453320625fd90010275b49774bd374397f8fbdc24c3eca6b952
+FROM cgr.dev/chainguard/python@sha256:60e3c0d33ab77e50ace0850ccdf6eaec825ce89dad9b1ec2b0300a2070892b05
 
 WORKDIR /app
 
