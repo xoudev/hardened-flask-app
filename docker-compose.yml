@@ -1,3 +1,6 @@
+# Nom fixe : les noms de conteneurs (lab-python-db-1...) ne dépendent plus du dossier de clone
+name: lab-python
+
 services:
   app:
     build: .
