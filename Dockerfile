@@ -18,7 +18,6 @@ COPY --from=builder /home/nonroot/venv /home/nonroot/venv
 COPY app/ ./app/
 
 ENV PATH="/home/nonroot/venv/bin:$PATH"
-ENV PYTHONPATH="/home/nonroot/venv/lib/python3.12/site-packages"
 
 USER 65532:65532
 
