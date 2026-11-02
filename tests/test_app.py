@@ -64,6 +64,6 @@ def test_error_does_not_leak_details(client):
 
 def test_error_is_logged_with_details(client, caplog):
     with patch("app.services.vault.get_dynamic_db_creds", side_effect=RuntimeError("DATABASE_PASSWORD=123")):
-        response = client.get("/")
+        client.get("/")
 
     assert "DATABASE_PASSWORD=123" in caplog.text
