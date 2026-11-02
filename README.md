@@ -136,7 +136,10 @@ le droit `contents: read` :
 - Les CVE des images tierces sont en rapport seulement : elles viennent de l'amont (`gosu` dans PostgreSQL, `go-jose` dans Vault)
   et ne sont pas corrigeables ici. Dependabot proposera les nouveaux digests quand l'éditeur publiera un correctif.
 - Trivy ne lit pas `docker-compose.yml` : le durcissement du compose est contrôlé par le test d'intégration, pas par un scan.
-- Les exceptions Trivy sont dans [`.trivyignore`](.trivyignore), avec le motif.
+- Les exceptions Trivy sont dans [`.trivyignore`](.trivyignore), chacune avec son motif et une **date d'échéance** : passé ce délai, le CVE
+  réapparaît et la CI échoue, ce qui force la revue.
+- [Dependabot](.github/dependabot.yml) propose chaque semaine les nouveaux digests, dépendances et actions.
+- Un nouveau commit sur une PR annule le run précédent, et chaque job a un `timeout-minutes`.
 
 ## Risques acceptés et points faibles connus
 
@@ -147,12 +150,9 @@ Ce lab n'est pas une production. Voici ce qui est assumé, et ce qu'un audit rel
 | Vault en **mode dev** (stockage en mémoire, pas de TLS, pas d'unseal) avec le **root token** `myroottoken` | Facilite le lab : tout est reconfiguré à chaque `reset_lab.sh` | Mode serveur avec stockage persistant, TLS, politiques à moindre privilège |
 | L'application s'authentifie à Vault **avec le root token** | Raccourci du lab | AppRole (ou auth Kubernetes) avec une politique limitée au rôle `app-readwrite` |
 | Mot de passe de PostgreSQL de démonstration généré dans `secrets/` | Local, ignoré par git, jamais commité | Géré par Vault ou Azure Key Vault |
-| `hashicorp/vault:latest` et `postgres:16-alpine` **non épinglés par digest** | Oubli de cohérence avec l'image de l'application | Épingler par digest, et vérifier avec Dependabot |
-| Stage `builder` en `chainguard/python:latest-dev` non épinglé | Le builder n'est pas livré, mais un build n'est pas reproductible | Épingler par digest |
 | Profil seccomp en **liste de blocage** (`defaultAction: ALLOW`, 12 appels refusés) | Simple à écrire et à maintenir | Profil en liste blanche construit à partir d'un `strace` |
 | Conteneur PostgreSQL moins durci que l'application (`no-new-privileges` seulement) | L'image officielle écrit dans plusieurs répertoires et change d'utilisateur au démarrage | `cap_drop` ciblé, `read_only` avec `tmpfs` adaptés |
 | Serveur de développement Flask | Suffisant pour un lab | Gunicorn |
-| Exceptions de `.trivyignore` sans date d'échéance | Elles sont motivées, mais pas datées | Ajouter une échéance de revue à chaque entrée |
 
 ## Ce que j'ai appris
 
@@ -189,14 +189,14 @@ Ce lab n'est pas une production. Voici ce qui est assumé, et ce qu'un audit rel
 
 - [ ] **Vault en production** : stockage persistant, TLS, unseal, politiques, AppRole à la place du root token
 - [ ] Gunicorn derrière un reverse proxy, journalisation JSON structurée, gestion d'erreurs sans fuite d'information
-- [ ] Épingler **toutes** les images par digest et verrouiller les dépendances Python avec leurs empreintes
+- [ ] Verrouiller les dépendances Python avec leurs empreintes (`--require-hashes`) ; les images sont déjà toutes épinglées par digest
 - [ ] Profil seccomp en liste blanche, durcissement du conteneur PostgreSQL, Docker rootless ou Podman
 - [ ] **SBOM** (Syft ou Trivy CycloneDX) à chaque build, **signature d'image** avec cosign en mode keyless, provenance SLSA
 - [ ] Publication de l'image dans un registre privé (Azure Container Registry) et vérification de la signature avant déploiement
 - [ ] Déploiement sur **Azure Container Apps** avec identité managée, sans aucun mot de passe stocké
 - [ ] Migrations de schéma versionnées (Alembic), pool de connexions avec rotation des identifiants éphémères
 - [ ] Observabilité : métriques (Prometheus, Grafana), alertes, détection runtime (Falco)
-- [ ] Dependabot sur pip, Docker et GitHub Actions, protection de la branche `main`, commits signés, `pre-commit`
+- [ ] Protection de la branche `main`, commits signés, `pre-commit` (Dependabot est déjà actif sur pip, Docker, Compose et GitHub Actions)
 - [ ] Introduire volontairement une injection SQL, la faire détecter par Semgrep puis par ZAP, la corriger
 - [ ] **Kubernetes** : traduire le `docker-compose.yml` en conservant tout le durcissement (`securityContext`, NetworkPolicies, Kyverno)
 - [ ] Threat model STRIDE de l'ensemble
