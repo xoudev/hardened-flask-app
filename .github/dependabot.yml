@@ -6,6 +6,10 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    # Attendre 7 jours avant de proposer une version tout juste publiée (supply chain).
+    # Ne s'applique pas aux mises à jour de sécurité, qui restent immédiates.
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: "chore(deps)"
 
@@ -14,6 +18,10 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    # Attendre 7 jours avant de proposer une version tout juste publiée (supply chain).
+    # Ne s'applique pas aux mises à jour de sécurité, qui restent immédiates.
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: "chore(docker)"
 
@@ -22,6 +30,10 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    # Attendre 7 jours avant de proposer une version tout juste publiée (supply chain).
+    # Ne s'applique pas aux mises à jour de sécurité, qui restent immédiates.
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: "chore(docker)"
 
@@ -30,5 +42,9 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    # Attendre 7 jours avant de proposer une version tout juste publiée (supply chain).
+    # Ne s'applique pas aux mises à jour de sécurité, qui restent immédiates.
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: "ci"
