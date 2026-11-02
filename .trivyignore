@@ -1,5 +1,4 @@
-# msgpack 1.2.4 patché dans la venv
-CVE-2026-114613
-
-# setuptools non utilisé au runtime par l'application
-CVE-2025-47273
+# CVE-2025-47273 : faux positif. Le setuptools réellement installé dans le venv est en 84.2.1 (corrigé
+# depuis 78.1.1). Trivy lit les métadonnées d'une copie embarquée en 70.3.0. Non exploitable : setuptools
+# n'est pas utilisé au runtime. À revoir à l'échéance : la copie embarquée aura peut-être disparu.
+CVE-2025-47273 exp:2027-02-01
