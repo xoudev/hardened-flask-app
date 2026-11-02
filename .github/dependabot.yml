@@ -34,6 +34,12 @@ updates:
     # Ne s'applique pas aux mises à jour de sécurité, qui restent immédiates.
     cooldown:
       default-days: 7
+    # Pas de montée de version majeure automatique : PostgreSQL 16 -> 18 change le format et l'emplacement
+    # des données et casse le volume existant (le test d'intégration l'a détecté). À faire à la main
+    # (dump/restore). Les correctifs de la branche 16 restent proposés.
+    ignore:
+      - dependency-name: "postgres"
+        update-types: ["version-update:semver-major"]
     commit-message:
       prefix: "chore(docker)"
 
