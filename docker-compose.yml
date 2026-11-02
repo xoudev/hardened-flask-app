@@ -34,7 +34,7 @@ services:
       - vault_token
 
   db:
-    image: postgres:16-alpine
+    image: postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab
     restart: unless-stopped
     pids_limit: 100
     mem_limit: 512M
@@ -59,7 +59,7 @@ services:
       start_period: 3s
 
   vault:
-    image: hashicorp/vault:latest
+    image: hashicorp/vault:2.2@sha256:962a92876e168d68eaaa24b0b8b49bbce1cb63024060a67bba95cd158a366fc2
     container_name: lab-vault
     restart: unless-stopped
     pids_limit: 100

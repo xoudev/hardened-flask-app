@@ -1,5 +1,5 @@
 # Stage 1 : Builder Chainguard (contient l'outillage pip et dev)
-FROM cgr.dev/chainguard/python:latest-dev AS builder
+FROM cgr.dev/chainguard/python:latest-dev@sha256:8a5780972067cfba4592b10e786a889807ed876c1100f89410fd0ed4e398992c AS builder
 
 WORKDIR /app
 
