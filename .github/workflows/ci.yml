@@ -107,8 +107,12 @@ jobs:
     needs: container-security
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
       - name: Application starts
         run: ./scripts/reset_lab.sh
+        
       - name: Get Docker Compose logs on failure
         if: failure()
         run: docker compose logs
