@@ -55,3 +55,15 @@ def test_fetch_users_maps_rows_and_closes_connection():
         {"id": 2, "username": "bob", "secret_note": "n2"},
     ]
     fake_conn.close.assert_called_once()
+
+def test_error_does_not_leak_details(client):
+    with patch("app.services.vault.get_dynamic_db_creds", side_effect=RuntimeError("DATABASE_PASSWORD=123")):
+        response = client.get("/")
+        texte = response.get_data(as_text=True)
+    assert "DATABASE_PASSWORD=123" not in texte
+
+def test_error_is_logged_with_details(client, caplog):
+    with patch("app.services.vault.get_dynamic_db_creds", side_effect=RuntimeError("DATABASE_PASSWORD=123")):
+        client.get("/")
+
+    assert "DATABASE_PASSWORD=123" in caplog.text

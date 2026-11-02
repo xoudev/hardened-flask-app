@@ -1,5 +1,5 @@
 """Endpoints HTTP de l'API."""
-from flask import Blueprint, jsonify
+from flask import Blueprint, current_app, jsonify
 
 from app.services import database, vault
 
@@ -18,7 +18,8 @@ def list_users():
     try:
         db_user, db_pass = vault.get_dynamic_db_creds()
         data = database.fetch_users(db_user, db_pass)
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+    except Exception:
+        current_app.logger.exception("Error : Failed to load users list")
+        return jsonify({"status": "error", "message": "internal error"}), 500
 
     return jsonify({"status": "success", "connected_as": db_user, "data": data}), 200
