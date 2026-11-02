@@ -145,11 +145,8 @@ Ce lab n'est pas une production. Voici ce qui est assumé, et ce qu'un audit rel
 | Stage `builder` en `chainguard/python:latest-dev` non épinglé | Le builder n'est pas livré, mais un build n'est pas reproductible | Épingler par digest |
 | Profil seccomp en **liste de blocage** (`defaultAction: ALLOW`, 12 appels refusés) | Simple à écrire et à maintenir | Profil en liste blanche construit à partir d'un `strace` |
 | Conteneur PostgreSQL moins durci que l'application (`no-new-privileges` seulement) | L'image officielle écrit dans plusieurs répertoires et change d'utilisateur au démarrage | `cap_drop` ciblé, `read_only` avec `tmpfs` adaptés |
-| `GET /` renvoie `str(e)` au client en cas d'erreur | Pratique pour déboguer | Message générique côté client, détail dans les logs |
-| Doublon de l'en-tête `Server` | Bannière Werkzeug masquée à deux endroits | Un seul endroit de masquage |
 | Serveur de développement Flask | Suffisant pour un lab | Gunicorn |
 | Exceptions de `.trivyignore` sans date d'échéance | Elles sont motivées, mais pas datées | Ajouter une échéance de revue à chaque entrée |
-| `PYTHONPATH` du Dockerfile pointe sur `python3.12` alors que le venv est en 3.15 | Reliquat d'une montée de version | Retirer la variable ou la rendre cohérente |
 
 ## Ce que j'ai appris
 
@@ -166,7 +163,8 @@ Ce lab n'est pas une production. Voici ce qui est assumé, et ce qu'un audit rel
 **Sécurité applicative**
 - Lire un rapport ZAP, distinguer un vrai positif d'un faux positif et justifier une règle ignorée.
 - Les en-têtes de sécurité HTTP et le rôle de chacun.
-- Pourquoi l'application ne doit jamais renvoyer le détail d'une exception au client (point encore à corriger ci-dessus).
+- Tester ce que le client de test ne voit pas : le doublon d'en-tête `Server` n'existait qu'au niveau socket. Un test sur un vrai serveur Werkzeug l'a mis en évidence, et révélé une espace parasite dans la valeur.
+- Ne jamais renvoyer le détail d'une exception au client : message générique côté réponse, détail et trace dans les logs. Prouvé par deux tests (`caplog` pour les logs, absence de la chaîne secrète dans la réponse).
 
 **CI/CD DevSecOps**
 - Chaîner des jobs avec `needs`, épingler les actions par SHA, ne donner que les permissions nécessaires.
