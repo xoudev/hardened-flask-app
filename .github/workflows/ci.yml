@@ -9,10 +9,16 @@ on:
 permissions:
   contents: read
 
+# Un nouveau commit sur une PR annule le run précédent de cette PR (jamais sur main)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   code-security-and-tests:
     name: Code Quality, Unit Tests & SAST
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       # actions/checkout v4.2.2 (épinglé par commit SHA)
@@ -75,12 +81,12 @@ jobs:
 
       - name: Run Semgrep SAST
         run: |
-          pip install semgrep
           semgrep scan --config auto --error
 
   container-security:
     name: Container Build & SCA Audit
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: code-security-and-tests
 
     steps:
@@ -114,6 +120,7 @@ jobs:
   list-compose-images:
     name: List compose images
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     needs: code-security-and-tests
     outputs:
       images: ${{ steps.list.outputs.images }}
@@ -132,6 +139,7 @@ jobs:
   scan-third-party-images:
     name: Third-party image audit
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: list-compose-images
     strategy:
       fail-fast: false
@@ -151,6 +159,7 @@ jobs:
   integration-test:
     name: Integration test
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: container-security
 
     steps:
@@ -171,6 +180,7 @@ jobs:
   dast-scan:
     name: Dynamic Application Security Testing (DAST)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: container-security
 
     steps:
