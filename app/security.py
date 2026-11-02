@@ -3,9 +3,9 @@ import werkzeug.serving
 
 SERVER_NAME = "api-gateway"
 
+# L'en-tête "Server" n'est volontairement pas ici : Werkzeug l'envoie déjà lui-même (voir
+# harden_werkzeug_banner), en l'ajoutant aussi on l'obtiendrait en double.
 SECURITY_HEADERS = {
-    # Masquage de la bannière serveur
-    "Server": SERVER_NAME,
     # Protection contre le reniflage MIME
     "X-Content-Type-Options": "nosniff",
     # Anti-clickjacking
@@ -32,6 +32,8 @@ def harden_werkzeug_banner() -> None:
     """Empêche Werkzeug d'envoyer "Server: Werkzeug/x.x Python/x.x" au niveau socket."""
     werkzeug.serving.WSGIRequestHandler.server_version = SERVER_NAME
     werkzeug.serving.WSGIRequestHandler.sys_version = ""
+    # Werkzeug assemble "server_version + ' ' + sys_version" : sans ce override, une espace finale reste.
+    werkzeug.serving.WSGIRequestHandler.version_string = lambda self: SERVER_NAME
 
 
 def apply_security_headers(response):

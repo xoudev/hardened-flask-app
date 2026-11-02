@@ -1,6 +1,11 @@
+import http.client
+import threading
 from unittest.mock import MagicMock, patch
 
-from app.security import SECURITY_HEADERS
+from werkzeug.serving import make_server
+
+from app import create_app
+from app.security import SECURITY_HEADERS, SERVER_NAME
 from app.services import database
 
 
@@ -56,14 +61,35 @@ def test_fetch_users_maps_rows_and_closes_connection():
     ]
     fake_conn.close.assert_called_once()
 
+
 def test_error_does_not_leak_details(client):
     with patch("app.services.vault.get_dynamic_db_creds", side_effect=RuntimeError("DATABASE_PASSWORD=123")):
         response = client.get("/")
         texte = response.get_data(as_text=True)
     assert "DATABASE_PASSWORD=123" not in texte
 
+
 def test_error_is_logged_with_details(client, caplog):
     with patch("app.services.vault.get_dynamic_db_creds", side_effect=RuntimeError("DATABASE_PASSWORD=123")):
         client.get("/")
 
     assert "DATABASE_PASSWORD=123" in caplog.text
+
+
+def test_server_header_sent_once_and_masked():
+    # Le doublon n'apparaît qu'au niveau socket (Werkzeug) : le client de test Flask ne le voit pas.
+    server = make_server("127.0.0.1", 0, create_app({"TESTING": True}))
+    thread = threading.Thread(target=server.serve_forever)
+    thread.start()
+    try:
+        connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=3)
+        connection.request("GET", "/health")
+        response = connection.getresponse()
+        server_headers = response.headers.get_all("Server")
+        connection.close()
+    finally:
+        server.shutdown()
+        thread.join()
+        server.server_close()
+
+    assert server_headers == [SERVER_NAME]
