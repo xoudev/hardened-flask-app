@@ -33,6 +33,15 @@ jobs:
           dockerfile: Dockerfile
           failure-threshold: error
 
+      # Mauvaises pratiques dans le Dockerfile (Trivy ne lit pas docker-compose.yml)
+      - name: Scan Dockerfile misconfigurations (Trivy config)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          scan-type: 'config'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+
       - name: Scan dependencies in requirements.txt (Trivy FS)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
@@ -101,6 +110,44 @@ jobs:
           ignore-unfixed: true
           exit-code: '0'
 
+  # Images tierces (PostgreSQL, Vault) : la liste vient de docker-compose.yml, jamais recopiée ici
+  list-compose-images:
+    name: List compose images
+    runs-on: ubuntu-latest
+    needs: code-security-and-tests
+    outputs:
+      images: ${{ steps.list.outputs.images }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      # lab-python-app est construite par la CI et déjà auditée par container-security
+      - name: List third-party images
+        id: list
+        run: |
+          images=$(docker compose config --images | grep -v '^lab-python-app$' | jq -R . | jq -sc .)
+          echo "images=${images}" >> "$GITHUB_OUTPUT"
+
+  scan-third-party-images:
+    name: Third-party image audit
+    runs-on: ubuntu-latest
+    needs: list-compose-images
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ${{ fromJson(needs.list-compose-images.outputs.images) }}
+
+    steps:
+      # Rapport seulement : les CVE de gosu (PostgreSQL) et go-jose (Vault) viennent de l'amont
+      - name: Audit ${{ matrix.image }}
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          image-ref: ${{ matrix.image }}
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          exit-code: '0'
+
   integration-test:
     name: Integration test
     runs-on: ubuntu-latest
@@ -112,13 +159,15 @@ jobs:
 
       - name: Application starts
         run: ./scripts/reset_lab.sh
-        
+
       - name: Get Docker Compose logs on failure
         if: failure()
         run: docker compose logs
-      - name: Clear the jobs
+
+      - name: Tear down the stack
         if: always()
         run: docker compose down -v
+
   dast-scan:
     name: Dynamic Application Security Testing (DAST)
     runs-on: ubuntu-latest

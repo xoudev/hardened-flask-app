@@ -109,13 +109,14 @@ PostgreSQL n'est donc joignable que depuis `db-net`, et Vault n'est pas exposé 
 
 ## Le pipeline CI
 
-Workflow [`ci.yml`](.github/workflows/ci.yml), déclenché sur les PR et les pushes vers `main`. Trois jobs enchaînés,
-chacun conditionné au précédent :
+Workflow [`ci.yml`](.github/workflows/ci.yml), déclenché sur les PR et les pushes vers `main`. Les jobs s'enchaînent (`needs`), et le token GitHub n'a que
+le droit `contents: read` :
 
 | Job | Contrôle | Outil | Bloquant |
 |---|---|---|---|
 | **Code, tests, SAST** | Secrets dans tout l'historique git | gitleaks | oui |
 | | Lint du Dockerfile | hadolint | oui (niveau `error`) |
+| | Mauvaises pratiques du Dockerfile | Trivy config | oui (HIGH, CRITICAL) |
 | | CVE des dépendances (`requirements.txt`) | Trivy fs | oui (HIGH, CRITICAL) |
 | | Lint Python | Ruff | oui |
 | | Tests unitaires | pytest | oui |
@@ -123,6 +124,8 @@ chacun conditionné au précédent :
 | **Image, SCA** | Build de l'image | Docker | oui |
 | | CVE des bibliothèques Python de l'image | Trivy image | oui (HIGH, CRITICAL) |
 | | CVE du système de l'image | Trivy image | non, rapport seulement |
+| **Images tierces** | CVE des images PostgreSQL et Vault (liste lue dans `docker-compose.yml`) | Trivy image | non, rapport seulement |
+| **Intégration** | La stack complète démarre et l'API répond (`scripts/reset_lab.sh`) | Docker Compose | oui |
 | **DAST** | Scan de l'application **en fonctionnement** | OWASP ZAP baseline | oui |
 
 À savoir :
@@ -130,6 +133,9 @@ chacun conditionné au précédent :
 - Toutes les actions tierces sont **épinglées par SHA de commit**.
 - Les règles ZAP sont dans [`.zap/rules.tsv`](.zap/rules.tsv). La fuite de version via l'en-tête `Server` est en `FAIL`,
   les autres règles ignorées sont chacune justifiées dans le fichier.
+- Les CVE des images tierces sont en rapport seulement : elles viennent de l'amont (`gosu` dans PostgreSQL, `go-jose` dans Vault)
+  et ne sont pas corrigeables ici. Dependabot proposera les nouveaux digests quand l'éditeur publiera un correctif.
+- Trivy ne lit pas `docker-compose.yml` : le durcissement du compose est contrôlé par le test d'intégration, pas par un scan.
 - Les exceptions Trivy sont dans [`.trivyignore`](.trivyignore), avec le motif.
 
 ## Risques acceptés et points faibles connus
