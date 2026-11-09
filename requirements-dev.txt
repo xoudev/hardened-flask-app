@@ -1,5 +1,5 @@
 # Pour les tests
 pytest==9.1.1
-ruff==0.8.4
+ruff==0.17.3
 # SAST (installé ici pour que Dependabot le mette à jour)
 semgrep==1.183.0
